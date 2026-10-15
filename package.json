@@ -1,0 +1,29 @@
+{
+  "name": "aarogyacare",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "test": "npm --workspace apps/api test",
+    "lint": "eslint .",
+    "format": "prettier --write package.json eslint.config.js .prettierrc.json docker-compose.yml README.md PROGRESS.md BACKLOG.md apps/api/package.json apps/api/src/config/env.js apps/api/src/lib/asyncHandler.js apps/api/src/lib/eventBus.js apps/api/src/lib/httpError.js apps/api/src/lib/prisma.js apps/api/src/lib/redis.js apps/api/src/lib/respond.js apps/api/src/middleware/errorHandler.js apps/api/src/app.js apps/api/src/app.test.js apps/api/src/server.js apps/web/package.json apps/web/index.html apps/web/vite.config.js apps/web/src/main.jsx apps/web/src/App.jsx",
+    "format:check": "prettier --check package.json eslint.config.js .prettierrc.json docker-compose.yml README.md PROGRESS.md BACKLOG.md apps/api/package.json apps/api/src/config/env.js apps/api/src/lib/asyncHandler.js apps/api/src/lib/eventBus.js apps/api/src/lib/httpError.js apps/api/src/lib/prisma.js apps/api/src/lib/redis.js apps/api/src/lib/respond.js apps/api/src/middleware/errorHandler.js apps/api/src/app.js apps/api/src/app.test.js apps/api/src/server.js apps/web/package.json apps/web/index.html apps/web/vite.config.js apps/web/src/main.jsx apps/web/src/App.jsx"
+  },
+  "devDependencies": {
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "prisma@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.25.12": true
+  }
+}

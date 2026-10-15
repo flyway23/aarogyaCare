@@ -1,0 +1,17 @@
+{
+  "name": "@aarogyacare/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.71.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
