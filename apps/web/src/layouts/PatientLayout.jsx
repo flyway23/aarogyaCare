@@ -9,6 +9,7 @@ export default function PatientLayout() {
         { label: 'My profile', to: '/patient/profile' },
         { label: 'Book a visit', to: '/patient/book' },
         { label: 'My appointments', to: '/patient/appointments' },
+        { label: 'My documents', to: '/patient/documents' },
       ]}
     />
   );

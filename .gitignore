@@ -3,5 +3,6 @@ dist/
 .env
 apps/api/uploads/*
 !apps/api/uploads/.gitkeep
+apps/api/.cache/
 coverage/
 apps/web/.edge-profile/

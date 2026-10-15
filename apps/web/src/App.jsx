@@ -14,6 +14,7 @@ const PatientHome = lazy(() => import('./pages/patient/PatientHome.jsx'));
 const PatientProfilePage = lazy(() => import('./pages/patient/PatientProfilePage.jsx'));
 const BookingPage = lazy(() => import('./pages/patient/BookingPage.jsx'));
 const AppointmentsPage = lazy(() => import('./pages/patient/AppointmentsPage.jsx'));
+const DocumentsPage = lazy(() => import('./pages/patient/DocumentsPage.jsx'));
 const DoctorHome = lazy(() => import('./pages/doctor/DoctorHome.jsx'));
 const OperatorHome = lazy(() => import('./pages/operator/OperatorHome.jsx'));
 const AdminHome = lazy(() => import('./pages/admin/AdminHome.jsx'));
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="profile" element={<PatientProfilePage />} />
           <Route path="book" element={<BookingPage />} />
           <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="documents" element={<DocumentsPage />} />
         </Route>
         <Route
           path="/doctor"

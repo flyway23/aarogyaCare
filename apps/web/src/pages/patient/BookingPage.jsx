@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { createAppointment } from '../../api/appointments.js';
@@ -12,6 +13,7 @@ import FormField from '../../components/FormField.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import Toast from '../../components/Toast.jsx';
 import { zodResolver } from '../../lib/zodResolver.js';
+import { uploadDocument } from '../../api/documents.js';
 
 const bookingSchema = z.object({
   specialtyId: z.string().uuid('Choose a specialty'),
@@ -39,6 +41,8 @@ const labelTime = (value) =>
   }).format(new Date(value));
 
 export default function BookingPage() {
+  const [documentFile, setDocumentFile] = useState(null);
+  const [uploadMessage, setUploadMessage] = useState('');
   const queryClient = useQueryClient();
   const form = useForm({
     resolver: zodResolver(bookingSchema),
@@ -84,6 +88,17 @@ export default function BookingPage() {
       form.setValue('slotStart', '');
       form.setValue('reason', '');
     },
+  });
+  const uploadAfterBooking = useMutation({
+    mutationFn: uploadDocument,
+    onSuccess: () => {
+      setDocumentFile(null);
+      setUploadMessage('Document attached to this appointment for processing.');
+    },
+    onError: (error) =>
+      setUploadMessage(
+        error?.response?.data?.message || 'Document upload failed.',
+      ),
   });
 
   return (
@@ -242,6 +257,47 @@ export default function BookingPage() {
             error={form.formState.errors.reason}
             placeholder="For example, recurring headaches"
           />
+        </div>
+        <div className="sm:col-span-2 rounded-xl border border-emerald-950/10 p-4">
+          <label
+            className="block text-sm font-medium text-ink"
+            htmlFor="booking-document"
+          >
+            Attach a report (optional)
+          </label>
+          <input
+            id="booking-document"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+            onChange={(event) =>
+              setDocumentFile(event.target.files?.[0] || null)
+            }
+            className="mt-2 text-sm"
+          />
+          {booking.data?.id && documentFile && (
+            <button
+              type="button"
+              disabled={uploadAfterBooking.isPending}
+              onClick={() =>
+                uploadAfterBooking.mutate({
+                  file: documentFile,
+                  appointmentId: booking.data.id,
+                })
+              }
+              className="ml-3 rounded-lg bg-forest px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              {uploadAfterBooking.isPending
+                ? 'Uploading…'
+                : 'Attach to this appointment'}
+            </button>
+          )}
+          {uploadMessage && (
+            <p className="mt-2 text-xs text-slate-600">{uploadMessage}</p>
+          )}
+          <p className="mt-2 text-xs text-slate-500">
+            PDF, JPG, or PNG; maximum 10 MB. You can also upload later from My
+            documents.
+          </p>
         </div>
         {slotStart && (
           <div className="rounded-xl bg-mint/60 p-4 text-sm text-forest sm:col-span-2">

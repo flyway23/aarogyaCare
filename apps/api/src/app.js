@@ -20,6 +20,7 @@ import bedRoutes from './modules/beds/routes.js';
 import emergencyRoutes from './modules/emergency/routes.js';
 import './modules/beds/events.js';
 import './modules/emergency/events.js';
+import documentRoutes from './modules/documents/routes.js';
 
 export const app = express();
 app.use(helmet());
@@ -40,6 +41,7 @@ app.use('/api', queueRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/beds', bedRoutes);
 app.use('/api', emergencyRoutes);
+app.use('/api', documentRoutes);
 
 app.get(
   '/api/health',

@@ -17,6 +17,8 @@ Requirements: Node.js 20, npm, and Docker Desktop with Compose.
 
 The browser app calls the API through Vite's local proxy. `GET /api/health` checks PostgreSQL and Redis.
 
+Patient documents are uploaded from `/patient/book` after reserving a slot or from `/patient/documents`. Files are stored locally in `apps/api/uploads/` (ignored by git), limited to PDF/JPG/PNG and 10 MB, and processed by the separate BullMQ worker. OCR downloads English language data on its first run and needs network access then. The included fake reports are under `apps/api/samples/`; with API and worker running, `node apps/api/samples/worker-smoke.mjs` exercises the separate worker.
+
 ## Demo accounts
 
 All seeded accounts use password `Pass@1234`:
@@ -75,6 +77,18 @@ The confirmation endpoint used in Phase 2 was removed to prevent confirming appo
 The operator portal has a live bed board and emergency dashboard. Socket.IO verifies the access JWT and only operator, doctor, and admin connections can join the `staff` room. Bed counts and metadata-only emergency alerts are broadcast live; authorized staff load full emergency details through the API. New emergency emails are queued for `EMERGENCY_DESK_EMAIL`; configure SMTP in `.env` for actual delivery. In development, email bodies are omitted from console output.
 
 The seed creates five wards and ten available beds for the demo. The patient portal has an urgent assistance form; it alerts the hospital team but does not arrange an ambulance.
+
+## Phase 5 document pipeline
+
+- `POST /api/documents`: authenticated patients only; accepts one PDF/JPG/PNG up to 10 MB and an optional appointment ID belonging to that patient. Returns a queued document.
+- `GET /api/documents`: patients see their own documents; doctors see documents only for patients they have appointments with; admins may review all metadata.
+- `GET /api/documents/:id/status`: patient owner, treating doctor, or admin.
+- `GET /api/documents/:id/file`: patient owner, treating doctor, or admin. Each download is audit logged.
+- `GET /api/patients/:id/search?q=`: doctor only, limited to patients they have appointments with.
+
+The worker hashes files to detect duplicates, reads at most 10 PDF pages, runs OCR on images, applies keyword classifications, and saves simple date/medicine/lab/amount extractions with source snippets. Abnormal lab values are flagged against printed numeric ranges. Appointment-linked uploads update a plain-text visit summary. Confirm extracted data against the original document. Doctor document access is currently appointment scoped; the Consent model and revocation controls are part of Phase 6.
+
+Three fake PDF samples (prescription, lab report, bill) and one fake lab image are included. Regenerate the PDFs with `node apps/api/samples/generate-samples.mjs`.
 
 ## Checks
 
