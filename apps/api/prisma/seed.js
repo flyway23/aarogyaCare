@@ -17,6 +17,15 @@ const demoUsers = [
 const passwordHash = await bcrypt.hash(password, 12);
 
 try {
+  const specialties = await Promise.all(
+    ['General Medicine', 'Cardiology', 'Dermatology'].map((name) =>
+      prisma.specialty.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      }),
+    ),
+  );
   for (const user of demoUsers) {
     const savedUser = await prisma.user.upsert({
       where: { email: user.email },
@@ -46,6 +55,39 @@ try {
           emergencyContactPhone: null,
         },
       });
+    }
+    if (user.role === 'DOCTOR') {
+      const doctorIndex = user.email === 'doctor1@aarogyacare.demo' ? 0 : 1;
+      const profile = await prisma.doctorProfile.upsert({
+        where: { userId: savedUser.id },
+        update: {
+          specialtyId: specialties[doctorIndex].id,
+          feeInr: doctorIndex === 0 ? 500 : 800,
+          bio: doctorIndex === 0 ? 'Primary care and family medicine.' : 'Heart health and preventive cardiology.',
+          avgConsultMinutes: 15,
+          status: 'AVAILABLE',
+        },
+        create: {
+          userId: savedUser.id,
+          specialtyId: specialties[doctorIndex].id,
+          feeInr: doctorIndex === 0 ? 500 : 800,
+          bio: doctorIndex === 0 ? 'Primary care and family medicine.' : 'Heart health and preventive cardiology.',
+          avgConsultMinutes: 15,
+          status: 'AVAILABLE',
+        },
+      });
+      await prisma.doctorSchedule.deleteMany({ where: { doctorId: profile.id } });
+      for (const weekday of [1, 2, 3, 4, 5]) {
+        await prisma.doctorSchedule.create({
+          data: {
+            doctorId: profile.id,
+            weekday,
+            startTime: doctorIndex === 0 ? '09:00' : '13:00',
+            endTime: doctorIndex === 0 ? '13:00' : '17:00',
+            slotMinutes: 15,
+          },
+        });
+      }
     }
   }
   console.log('Seeded demo accounts (all use password Pass@1234):');

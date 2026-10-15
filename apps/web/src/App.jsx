@@ -12,6 +12,8 @@ const OperatorLayout = lazy(() => import('./layouts/OperatorLayout.jsx'));
 const AdminLayout = lazy(() => import('./layouts/AdminLayout.jsx'));
 const PatientHome = lazy(() => import('./pages/patient/PatientHome.jsx'));
 const PatientProfilePage = lazy(() => import('./pages/patient/PatientProfilePage.jsx'));
+const BookingPage = lazy(() => import('./pages/patient/BookingPage.jsx'));
+const AppointmentsPage = lazy(() => import('./pages/patient/AppointmentsPage.jsx'));
 const DoctorHome = lazy(() => import('./pages/doctor/DoctorHome.jsx'));
 const OperatorHome = lazy(() => import('./pages/operator/OperatorHome.jsx'));
 const AdminHome = lazy(() => import('./pages/admin/AdminHome.jsx'));
@@ -35,6 +37,8 @@ export default function App() {
         >
           <Route index element={<PatientHome />} />
           <Route path="profile" element={<PatientProfilePage />} />
+          <Route path="book" element={<BookingPage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
         </Route>
         <Route
           path="/doctor"

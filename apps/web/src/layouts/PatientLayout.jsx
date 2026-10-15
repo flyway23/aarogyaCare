@@ -7,6 +7,8 @@ export default function PatientLayout() {
       links={[
         { label: 'Overview', to: '/patient', end: true },
         { label: 'My profile', to: '/patient/profile' },
+        { label: 'Book a visit', to: '/patient/book' },
+        { label: 'My appointments', to: '/patient/appointments' },
       ]}
     />
   );

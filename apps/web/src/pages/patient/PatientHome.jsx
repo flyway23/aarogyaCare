@@ -21,6 +21,18 @@ export default function PatientHome() {
       >
         Review my profile
       </Link>
+      <Link
+        to="/patient/book"
+        className="ml-3 mt-8 inline-flex items-center rounded-xl bg-forest px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink"
+      >
+        Book an appointment
+      </Link>
+      <Link
+        to="/patient/appointments"
+        className="mt-4 inline-flex items-center rounded-xl border border-emerald-950/15 px-5 py-3 text-sm font-semibold text-ink transition hover:bg-mint sm:ml-3"
+      >
+        View my appointments
+      </Link>
     </section>
   );
 }
