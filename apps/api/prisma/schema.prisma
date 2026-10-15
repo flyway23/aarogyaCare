@@ -37,6 +37,27 @@ enum QueueStatus {
   SKIPPED
 }
 
+enum PaymentMethod {
+  RAZORPAY
+  MOCK
+  CASH
+  UPI
+  CARD
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum RefundStatus {
+  CREATED
+  PROCESSED
+  FAILED
+}
+
 model User {
   id           String          @id @default(uuid()) @db.Uuid
   email        String          @unique
@@ -161,6 +182,7 @@ model Appointment {
   doctor         DoctorProfile     @relation(fields: [doctorId], references: [id])
   bookedBy       User              @relation("AppointmentBookedBy", fields: [bookedByUserId], references: [id])
   queueEntry     QueueEntry?
+  payment        Payment?
 
   @@index([doctorId, slotStart, status])
   @@index([patientId, slotStart])
@@ -181,4 +203,30 @@ model QueueEntry {
 
   @@unique([doctorId, date, position])
   @@index([doctorId, date, status])
+}
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  appointmentId     String        @unique @db.Uuid
+  amountInr         Int
+  method            PaymentMethod
+  status            PaymentStatus @default(CREATED)
+  razorpayOrderId   String?       @unique
+  razorpayPaymentId String?       @unique
+  receiptNo         String        @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  appointment       Appointment  @relation(fields: [appointmentId], references: [id])
+  refund            Refund?
+}
+
+model Refund {
+  id        String       @id @default(uuid()) @db.Uuid
+  paymentId String       @unique @db.Uuid
+  amountInr Int
+  reason    String
+  status    RefundStatus @default(CREATED)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  payment   Payment      @relation(fields: [paymentId], references: [id])
 }

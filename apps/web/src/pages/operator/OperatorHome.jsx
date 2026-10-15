@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   checkInAppointment,
-  confirmAppointment,
   createAppointment,
   getDoctorAppointments,
   getQueue,
   updateQueue,
 } from '../../api/appointments.js';
+import { recordOfflinePayment } from '../../api/payments.js';
 import {
   getDoctorSlots,
   getDoctors,
@@ -52,6 +52,7 @@ const reorderSchema = z.object({
 export default function OperatorHome() {
   const client = useQueryClient();
   const [createdAppointment, setCreatedAppointment] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('CASH');
   const form = useForm({
     resolver: zodResolver(walkInSchema),
     defaultValues: {
@@ -117,7 +118,8 @@ export default function OperatorHome() {
     },
   });
   const confirm = useMutation({
-    mutationFn: confirmAppointment,
+    mutationFn: (appointmentId) =>
+      recordOfflinePayment(appointmentId, paymentMethod),
     onSuccess: (_appointment, id) => {
       if (createdAppointment?.id === id) setCreatedAppointment(null);
       invalidate();
@@ -156,7 +158,7 @@ export default function OperatorHome() {
           Walk-in booking and queue
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Create bookings for walk-in patients, confirm demo bookings, and
+          Create bookings for walk-in patients, record offline payments, and
           manage today’s checked-in queue.
         </p>
       </div>
@@ -332,7 +334,9 @@ export default function OperatorHome() {
                   onClick={() => confirm.mutate(createdAppointment.id)}
                   className="rounded-xl bg-forest px-4 py-2.5 text-sm font-semibold text-white hover:bg-ink disabled:opacity-50"
                 >
-                  {confirm.isPending ? 'Confirming…' : 'Confirm demo booking'}
+                  {confirm.isPending
+                    ? 'Recording…'
+                    : `Record ${paymentMethod.toLowerCase()} payment`}
                 </button>
               </div>
             )}
@@ -348,6 +352,18 @@ export default function OperatorHome() {
             {booking.isPending ? 'Creating booking…' : 'Create walk-in booking'}
           </button>
         </form>
+        <label className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-ink">
+          Offline payment method
+          <select
+            value={paymentMethod}
+            onChange={(event) => setPaymentMethod(event.target.value)}
+            className="rounded-xl border border-emerald-950/10 bg-white px-3 py-2"
+          >
+            <option value="CASH">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="CARD">Card</option>
+          </select>
+        </label>
       </section>
 
       <section id="queue" className="max-w-5xl scroll-mt-8">
@@ -429,7 +445,7 @@ export default function OperatorHome() {
                     onClick={() => confirm.mutate(appointment.id)}
                     className="rounded-xl bg-forest px-3 py-2 text-xs font-semibold text-white"
                   >
-                    Confirm
+                    Record offline payment
                   </button>
                 )}
                 {appointment.status === 'CONFIRMED' && (

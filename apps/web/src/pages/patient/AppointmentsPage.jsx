@@ -5,6 +5,11 @@ import {
 } from '../../api/appointments.js';
 import Spinner from '../../components/Spinner.jsx';
 import Toast from '../../components/Toast.jsx';
+import {
+  createPaymentOrder,
+  openReceipt,
+  verifyPayment,
+} from '../../api/payments.js';
 
 const dateTime = (value) =>
   new Intl.DateTimeFormat(undefined, {
@@ -23,6 +28,53 @@ export default function AppointmentsPage() {
     onSuccess: () =>
       client.invalidateQueries({ queryKey: ['my-appointments'] }),
   });
+  const pay = useMutation({
+    mutationFn: async (appointmentId) => {
+      const result = await createPaymentOrder(appointmentId);
+      if (result.mock) return result;
+      const scriptUrl = 'https://checkout.razorpay.com/v1/checkout.js';
+      if (!window.Razorpay) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = scriptUrl;
+          script.onload = resolve;
+          script.onerror = () =>
+            reject(new Error('Payment checkout could not be loaded'));
+          document.body.appendChild(script);
+        });
+      }
+      await new Promise((resolve, reject) => {
+        const checkout = new window.Razorpay({
+          key: result.keyId,
+          order_id: result.order.id,
+          amount: result.order.amount,
+          currency: result.order.currency,
+          name: 'AarogyaCare',
+          description: 'Appointment payment',
+          handler: async (response) => {
+            try {
+              await verifyPayment({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+              });
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error('Payment was cancelled')),
+          },
+        });
+        checkout.open();
+      });
+      return result;
+    },
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: ['my-appointments'] }),
+  });
+  const receipt = useMutation({ mutationFn: openReceipt });
   return (
     <section className="max-w-4xl">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-forest">
@@ -72,10 +124,36 @@ export default function AppointmentsPage() {
             </p>
             {appointment.status === 'HELD' && (
               <p className="mt-3 text-sm text-amber-800">
-                This slot is held for five minutes. Payment confirmation will be
-                available in the next phase.
+                This slot is held for five minutes. Complete payment to confirm
+                it.
               </p>
             )}
+            {appointment.status === 'HELD' && (
+              <button
+                type="button"
+                disabled={pay.isPending}
+                onClick={() => pay.mutate(appointment.id)}
+                className="mt-4 mr-2 rounded-xl bg-forest px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {pay.isPending ? 'Processing…' : 'Pay now'}
+              </button>
+            )}
+            {[
+              'CONFIRMED',
+              'CHECKED_IN',
+              'IN_CONSULTATION',
+              'COMPLETED',
+              'CANCELLED',
+            ].includes(appointment.status) &&
+              appointment.payment?.status && (
+                <button
+                  type="button"
+                  onClick={() => receipt.mutate(appointment.payment.id)}
+                  className="mt-4 mr-2 rounded-xl border border-forest px-4 py-2 text-sm font-semibold text-forest"
+                >
+                  View receipt
+                </button>
+              )}
             {['HELD', 'CONFIRMED'].includes(appointment.status) && (
               <button
                 type="button"
@@ -95,6 +173,27 @@ export default function AppointmentsPage() {
             message={
               cancel.error?.response?.data?.message ??
               'Appointment could not be cancelled.'
+            }
+          />
+        </div>
+      )}
+      {pay.isError && (
+        <div className="mt-4">
+          <Toast
+            message={
+              pay.error?.response?.data?.message ??
+              pay.error.message ??
+              'Payment could not be completed.'
+            }
+          />
+        </div>
+      )}
+      {receipt.isError && (
+        <div className="mt-4">
+          <Toast
+            message={
+              receipt.error?.response?.data?.message ??
+              'Receipt could not be opened.'
             }
           />
         </div>

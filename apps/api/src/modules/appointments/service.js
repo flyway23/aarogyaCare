@@ -17,6 +17,15 @@ const appointmentRelations = {
   },
   patient: { select: { id: true, name: true, phone: true, email: true } },
   queueEntry: true,
+  payment: {
+    select: {
+      id: true,
+      status: true,
+      method: true,
+      amountInr: true,
+      receiptNo: true,
+    },
+  },
 };
 const appointmentSelection = (includeReason = false) => ({
   id: true,
@@ -207,31 +216,6 @@ export const cancelAppointment = async (id, requester) => {
       where: { id },
       data: { status: 'CANCELLED', heldUntil: null },
       select: appointmentSelection(requester.role === 'patient'),
-    });
-  });
-};
-
-/** @param {string} id @returns {Promise<object>} */
-export const confirmAppointment = async (id) => {
-  return prisma.$transaction(async (tx) => {
-    const result = await tx.appointment.updateMany({
-      where: { id, status: 'HELD', heldUntil: { gt: new Date() } },
-      data: { status: 'CONFIRMED', heldUntil: null },
-    });
-    if (!result.count) {
-      const appointment = await tx.appointment.findUnique({
-        where: { id },
-        select: { id: true },
-      });
-      if (!appointment) throw new HttpError(404, 'Appointment not found');
-      throw new HttpError(
-        409,
-        'Appointment hold has expired or is no longer active',
-      );
-    }
-    return tx.appointment.findUnique({
-      where: { id },
-      select: appointmentSelection(false),
     });
   });
 };

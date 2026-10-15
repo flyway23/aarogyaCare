@@ -54,6 +54,17 @@ describe('Phase 2 doctors, appointments, and queue', () => {
     leaveDay.setUTCDate(leaveDay.getUTCDate() + 7);
     leaveDate = leaveDay.toISOString().slice(0, 10);
     walkInPhone = `99999${String(Date.now()).slice(-5)}`;
+    await prisma.payment.deleteMany({
+      where: {
+        appointment: {
+          doctorId: doctor.id,
+          slotStart: {
+            gte: new Date(`${date}T00:00:00.000Z`),
+            lt: new Date(`${date}T23:59:59.999Z`),
+          },
+        },
+      },
+    });
     await prisma.appointment.deleteMany({
       where: {
         doctorId: doctor.id,
@@ -67,6 +78,17 @@ describe('Phase 2 doctors, appointments, and queue', () => {
 
   afterAll(async () => {
     if (doctor && date) {
+      await prisma.payment.deleteMany({
+        where: {
+          appointment: {
+            doctorId: doctor.id,
+            slotStart: {
+              gte: new Date(`${date}T00:00:00.000Z`),
+              lt: new Date(`${date}T23:59:59.999Z`),
+            },
+          },
+        },
+      });
       await prisma.appointment.deleteMany({
         where: {
           doctorId: doctor.id,
@@ -157,11 +179,11 @@ describe('Phase 2 doctors, appointments, and queue', () => {
     ).toBe(false);
 
     const confirmed = await request(app)
-      .post(`/api/appointments/${booked.id}/confirm`)
+      .post('/api/payments/offline')
       .set('Authorization', `Bearer ${tokenFor(operator)}`)
-      .send({});
+      .send({ appointmentId: booked.id, method: 'CASH' });
     expect(confirmed.status).toBe(200);
-    expect(confirmed.body.data.status).toBe('CONFIRMED');
+    expect(confirmed.body.data.payment.status).toBe('PAID');
 
     const estimate = await request(app)
       .get(`/api/doctors/${doctor.id}/queue-info`)
@@ -217,9 +239,9 @@ describe('Phase 2 doctors, appointments, and queue', () => {
         .send({ ...payload, slotStart: nextSlot.toISOString() });
       expect(created.status).toBe(200);
       const confirmedNext = await request(app)
-        .post(`/api/appointments/${created.body.data.id}/confirm`)
+        .post('/api/payments/offline')
         .set('Authorization', `Bearer ${tokenFor(operator)}`)
-        .send({});
+        .send({ appointmentId: created.body.data.id, method: 'CASH' });
       expect(confirmedNext.status).toBe(200);
       const checkedNext = await request(app)
         .post(`/api/appointments/${created.body.data.id}/check-in`)

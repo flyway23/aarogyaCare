@@ -11,7 +11,6 @@ import {
 import {
   cancel,
   checkIn,
-  confirm,
   create,
   listForOperator,
   mine,
@@ -38,14 +37,6 @@ router.post(
   requireRole('patient', 'operator'),
   validate(createAppointmentSchema),
   create,
-);
-router.post(
-  '/appointments/:id/confirm',
-  auth,
-  requireRole('operator'),
-  validate(appointmentIdSchema, 'params'),
-  validate(emptyObjectSchema),
-  confirm,
 );
 router.post(
   '/appointments/:id/cancel',

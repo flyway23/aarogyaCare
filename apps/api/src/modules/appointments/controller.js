@@ -3,7 +3,6 @@ import { respond } from '../../lib/respond.js';
 import {
   cancelAppointment,
   checkInAppointment,
-  confirmAppointment,
   createAppointment,
   listDoctorAppointments,
   listMyAppointments,
@@ -23,9 +22,6 @@ export const listForOperator = asyncHandler(async (req, res) =>
 );
 export const cancel = asyncHandler(async (req, res) =>
   respond(res, await cancelAppointment(req.params.id, req.user)),
-);
-export const confirm = asyncHandler(async (req, res) =>
-  respond(res, await confirmAppointment(req.params.id)),
 );
 export const checkIn = asyncHandler(async (req, res) =>
   respond(res, await checkInAppointment(req.params.id)),

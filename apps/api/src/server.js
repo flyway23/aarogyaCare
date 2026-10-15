@@ -3,6 +3,7 @@ import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './lib/redis.js';
 import { releaseExpiredHolds } from './modules/appointments/service.js';
+import { closePaymentEmailQueue } from './modules/payments/events.js';
 
 await Promise.all([prisma.$connect(), redis.connect()]);
 await releaseExpiredHolds();
@@ -17,7 +18,7 @@ const server = app.listen(env.API_PORT, () => {
 const shutdown = async () => {
   clearInterval(holdCleanup);
   server.close();
-  await Promise.all([prisma.$disconnect(), redis.quit()]);
+  await Promise.all([prisma.$disconnect(), redis.quit(), closePaymentEmailQueue()]);
 };
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

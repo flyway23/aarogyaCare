@@ -14,17 +14,26 @@ import adminRoutes from './modules/admin/routes.js';
 import doctorRoutes from './modules/doctors/routes.js';
 import appointmentRoutes from './modules/appointments/routes.js';
 import queueRoutes from './modules/queue/routes.js';
+import paymentRoutes from './modules/payments/routes.js';
+import './modules/payments/events.js';
 
 export const app = express();
 app.use(helmet());
 app.use(cors({ origin: env.WEB_ORIGIN }));
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req, _res, buffer) => {
+      req.rawBody = Buffer.from(buffer);
+    },
+  }),
+);
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', doctorRoutes);
 app.use('/api', appointmentRoutes);
 app.use('/api', queueRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get(
   '/api/health',
