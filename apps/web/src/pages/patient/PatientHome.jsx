@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext.jsx';
+import EmergencyForm from './EmergencyForm.jsx';
 
 export default function PatientHome() {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ export default function PatientHome() {
       >
         Review my profile
       </Link>
+      <EmergencyForm />
       <Link
         to="/patient/book"
         className="ml-3 mt-8 inline-flex items-center rounded-xl bg-forest px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink"

@@ -37,6 +37,10 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().email().default('no-reply@aarogyacare.com'),
+  EMERGENCY_DESK_EMAIL: z
+    .string()
+    .email()
+    .default('emergency@aarogyacare.local'),
 });
 
 export const env = envSchema.parse(process.env);

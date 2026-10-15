@@ -63,7 +63,10 @@ try {
         update: {
           specialtyId: specialties[doctorIndex].id,
           feeInr: doctorIndex === 0 ? 500 : 800,
-          bio: doctorIndex === 0 ? 'Primary care and family medicine.' : 'Heart health and preventive cardiology.',
+          bio:
+            doctorIndex === 0
+              ? 'Primary care and family medicine.'
+              : 'Heart health and preventive cardiology.',
           avgConsultMinutes: 15,
           status: 'AVAILABLE',
         },
@@ -71,12 +74,17 @@ try {
           userId: savedUser.id,
           specialtyId: specialties[doctorIndex].id,
           feeInr: doctorIndex === 0 ? 500 : 800,
-          bio: doctorIndex === 0 ? 'Primary care and family medicine.' : 'Heart health and preventive cardiology.',
+          bio:
+            doctorIndex === 0
+              ? 'Primary care and family medicine.'
+              : 'Heart health and preventive cardiology.',
           avgConsultMinutes: 15,
           status: 'AVAILABLE',
         },
       });
-      await prisma.doctorSchedule.deleteMany({ where: { doctorId: profile.id } });
+      await prisma.doctorSchedule.deleteMany({
+        where: { doctorId: profile.id },
+      });
       for (const weekday of [1, 2, 3, 4, 5]) {
         await prisma.doctorSchedule.create({
           data: {
@@ -88,6 +96,26 @@ try {
           },
         });
       }
+    }
+  }
+  for (const [type, name] of [
+    ['GENERAL', 'General Ward'],
+    ['PRIVATE', 'Private Ward'],
+    ['SEMI_PRIVATE', 'Semi Private Ward'],
+    ['ICU', 'Intensive Care'],
+    ['EMERGENCY', 'Emergency Ward'],
+  ]) {
+    const ward = await prisma.ward.upsert({
+      where: { name_type: { name, type } },
+      update: {},
+      create: { name, type },
+    });
+    for (const bedNumber of ['01', '02']) {
+      await prisma.bed.upsert({
+        where: { wardId_bedNumber: { wardId: ward.id, bedNumber } },
+        update: {},
+        create: { wardId: ward.id, bedNumber },
+      });
     }
   }
   console.log('Seeded demo accounts (all use password Pass@1234):');

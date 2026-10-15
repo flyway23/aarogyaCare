@@ -19,6 +19,7 @@ import FormField from '../../components/FormField.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import Toast from '../../components/Toast.jsx';
 import { zodResolver } from '../../lib/zodResolver.js';
+import PhaseFourPanel from './PhaseFourPanel.jsx';
 
 const todayInKolkata = () =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(
@@ -162,6 +163,8 @@ export default function OperatorHome() {
           manage today’s checked-in queue.
         </p>
       </div>
+
+      <PhaseFourPanel />
 
       <section id="walk-in" className="max-w-4xl scroll-mt-8">
         <h2 className="text-xl font-semibold text-ink">Walk-in booking</h2>

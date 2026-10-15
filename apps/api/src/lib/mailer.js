@@ -7,7 +7,7 @@ export const sendEmail = async ({ to, subject, text }) => {
   if (!env.SMTP_HOST) {
     if (env.NODE_ENV === 'production')
       throw new HttpError(503, 'Email delivery is not configured');
-    console.info(`Development email to ${to}: ${subject}\n${text}`);
+    console.info(`Development email queued to ${to}: ${subject}`);
     return;
   }
 

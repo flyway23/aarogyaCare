@@ -63,6 +63,19 @@ The default `MOCK_PAYMENTS=true` skips Razorpay and marks patient checkout paid 
 
 The confirmation endpoint used in Phase 2 was removed to prevent confirming appointments without a payment record. Operators now confirm walk-ins through the offline payment endpoint.
 
+## Phase 4 beds and emergency handling
+
+- `GET /api/beds`: operator/admin only; groups ward inventory and counts by ward type.
+- `POST /api/beds/:id/assign`, `/release`, `/status`, and `/reserve`: operator/admin only. Assignments accept a registered patient phone or an emergency case. Assignments/reservations are transactional; reservations expire after 30 minutes. Releasing an occupied bed moves it to `CLEANING`.
+- `POST /api/emergency`: patient/operator. A patient case is linked to the signed-in patient and does not require payment.
+- `GET /api/emergency`: operator/doctor/admin only, with critical cases first. Doctors see only emergencies for patients they have appointments with.
+- `POST /api/emergency/:id/accept`, `/reserve-bed`, and `/close`: operator/admin only.
+- `POST /api/appointments/:id/escalate`: operator only; links the emergency to its appointment.
+
+The operator portal has a live bed board and emergency dashboard. Socket.IO verifies the access JWT and only operator, doctor, and admin connections can join the `staff` room. Bed counts and metadata-only emergency alerts are broadcast live; authorized staff load full emergency details through the API. New emergency emails are queued for `EMERGENCY_DESK_EMAIL`; configure SMTP in `.env` for actual delivery. In development, email bodies are omitted from console output.
+
+The seed creates five wards and ten available beds for the demo. The patient portal has an urgent assistance form; it alerts the hospital team but does not arrange an ambulance.
+
 ## Checks
 
 - Run API tests: `npm.cmd test`.

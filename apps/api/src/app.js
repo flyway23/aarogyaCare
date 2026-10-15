@@ -16,6 +16,10 @@ import appointmentRoutes from './modules/appointments/routes.js';
 import queueRoutes from './modules/queue/routes.js';
 import paymentRoutes from './modules/payments/routes.js';
 import './modules/payments/events.js';
+import bedRoutes from './modules/beds/routes.js';
+import emergencyRoutes from './modules/emergency/routes.js';
+import './modules/beds/events.js';
+import './modules/emergency/events.js';
 
 export const app = express();
 app.use(helmet());
@@ -34,6 +38,8 @@ app.use('/api', doctorRoutes);
 app.use('/api', appointmentRoutes);
 app.use('/api', queueRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/beds', bedRoutes);
+app.use('/api', emergencyRoutes);
 
 app.get(
   '/api/health',

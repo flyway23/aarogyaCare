@@ -58,22 +58,57 @@ enum RefundStatus {
   FAILED
 }
 
+enum WardType {
+  GENERAL
+  PRIVATE
+  SEMI_PRIVATE
+  ICU
+  EMERGENCY
+}
+
+enum BedStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  CLEANING
+  OUT_OF_SERVICE
+}
+
+enum EmergencySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum EmergencyStatus {
+  RAISED
+  ACCEPTED
+  ADMITTED
+  CLOSED
+}
+
 model User {
-  id           String          @id @default(uuid()) @db.Uuid
-  email        String          @unique
-  passwordHash String
-  name         String
-  phone        String?
-  role         Role
-  isActive     Boolean         @default(true)
-  deletedAt    DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  patientProfile PatientProfile?
-  auditLogs    AuditLog[]
-  doctorProfile DoctorProfile?
-  appointmentsAsPatient Appointment[] @relation("AppointmentPatient")
-  appointmentsBooked Appointment[] @relation("AppointmentBookedBy")
+  id                    String          @id @default(uuid()) @db.Uuid
+  email                 String          @unique
+  passwordHash          String
+  name                  String
+  phone                 String?
+  role                  Role
+  isActive              Boolean         @default(true)
+  deletedAt             DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  patientProfile        PatientProfile?
+  auditLogs             AuditLog[]
+  doctorProfile         DoctorProfile?
+  appointmentsAsPatient Appointment[]   @relation("AppointmentPatient")
+  appointmentsBooked    Appointment[]   @relation("AppointmentBookedBy")
+  bedAssignments        BedAssignment[] @relation("BedAssignmentAssignee")
+  bedAssignmentsFor     BedAssignment[] @relation("BedAssignmentPatient")
+  emergenciesRaised     EmergencyCase[] @relation("EmergencyRaisedBy")
+  emergenciesAccepted   EmergencyCase[] @relation("EmergencyAcceptedBy")
+  emergencyCases        EmergencyCase[] @relation("EmergencyPatient")
 
   @@index([role, isActive])
 }
@@ -123,43 +158,43 @@ model Specialty {
 }
 
 model DoctorProfile {
-  id                 String           @id @default(uuid()) @db.Uuid
-  userId             String           @unique @db.Uuid
-  specialtyId        String           @db.Uuid
-  feeInr             Int
-  bio                String           @default("")
-  avgConsultMinutes  Int              @default(15)
-  status             DoctorStatus     @default(AVAILABLE)
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialty          Specialty        @relation(fields: [specialtyId], references: [id])
-  schedules          DoctorSchedule[]
-  leaves             DoctorLeave[]
-  appointments       Appointment[]
-  queueEntries       QueueEntry[]
+  id                String           @id @default(uuid()) @db.Uuid
+  userId            String           @unique @db.Uuid
+  specialtyId       String           @db.Uuid
+  feeInr            Int
+  bio               String           @default("")
+  avgConsultMinutes Int              @default(15)
+  status            DoctorStatus     @default(AVAILABLE)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty         Specialty        @relation(fields: [specialtyId], references: [id])
+  schedules         DoctorSchedule[]
+  leaves            DoctorLeave[]
+  appointments      Appointment[]
+  queueEntries      QueueEntry[]
 }
 
 model DoctorSchedule {
-  id         String       @id @default(uuid()) @db.Uuid
-  doctorId   String       @db.Uuid
-  weekday    Int
-  startTime  String
-  endTime    String
-  slotMinutes Int         @default(15)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  doctor     DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  id          String        @id @default(uuid()) @db.Uuid
+  doctorId    String        @db.Uuid
+  weekday     Int
+  startTime   String
+  endTime     String
+  slotMinutes Int           @default(15)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   @@unique([doctorId, weekday, startTime])
 }
 
 model DoctorLeave {
-  id        String       @id @default(uuid()) @db.Uuid
-  doctorId  String       @db.Uuid
-  date      DateTime     @db.Date
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id        String        @id @default(uuid()) @db.Uuid
+  doctorId  String        @db.Uuid
+  date      DateTime      @db.Date
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
   doctor    DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   @@unique([doctorId, date])
@@ -183,23 +218,24 @@ model Appointment {
   bookedBy       User              @relation("AppointmentBookedBy", fields: [bookedByUserId], references: [id])
   queueEntry     QueueEntry?
   payment        Payment?
+  emergencyCase  EmergencyCase?
 
   @@index([doctorId, slotStart, status])
   @@index([patientId, slotStart])
 }
 
 model QueueEntry {
-  id             String      @id @default(uuid()) @db.Uuid
-  appointmentId  String      @unique @db.Uuid
-  doctorId       String      @db.Uuid
-  date           DateTime    @db.Date
-  position       Int
-  status         QueueStatus @default(WAITING)
-  reorderReason  String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  appointment    Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  doctor         DoctorProfile @relation(fields: [doctorId], references: [id])
+  id            String        @id @default(uuid()) @db.Uuid
+  appointmentId String        @unique @db.Uuid
+  doctorId      String        @db.Uuid
+  date          DateTime      @db.Date
+  position      Int
+  status        QueueStatus   @default(WAITING)
+  reorderReason String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  doctor        DoctorProfile @relation(fields: [doctorId], references: [id])
 
   @@unique([doctorId, date, position])
   @@index([doctorId, date, status])
@@ -216,7 +252,7 @@ model Payment {
   receiptNo         String        @unique
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
-  appointment       Appointment  @relation(fields: [appointmentId], references: [id])
+  appointment       Appointment   @relation(fields: [appointmentId], references: [id])
   refund            Refund?
 }
 
@@ -229,4 +265,72 @@ model Refund {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   payment   Payment      @relation(fields: [paymentId], references: [id])
+}
+
+model Ward {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  type      WardType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  beds      Bed[]
+
+  @@unique([name, type])
+}
+
+model Bed {
+  id            String          @id @default(uuid()) @db.Uuid
+  wardId        String          @db.Uuid
+  bedNumber     String
+  status        BedStatus       @default(AVAILABLE)
+  reservedUntil DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  ward          Ward            @relation(fields: [wardId], references: [id], onDelete: Cascade)
+  assignments   BedAssignment[]
+
+  @@unique([wardId, bedNumber])
+  @@index([status, reservedUntil])
+}
+
+model EmergencyCase {
+  id                  String            @id @default(uuid()) @db.Uuid
+  patientId           String?           @db.Uuid
+  name                String
+  phone               String
+  complaint           String
+  severity            EmergencySeverity
+  location            String
+  status              EmergencyStatus   @default(RAISED)
+  raisedByUserId      String            @db.Uuid
+  linkedAppointmentId String?           @unique @db.Uuid
+  acceptedByUserId    String?           @db.Uuid
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  patient             User?             @relation("EmergencyPatient", fields: [patientId], references: [id], onDelete: SetNull)
+  raisedBy            User              @relation("EmergencyRaisedBy", fields: [raisedByUserId], references: [id])
+  acceptedBy          User?             @relation("EmergencyAcceptedBy", fields: [acceptedByUserId], references: [id])
+  linkedAppointment   Appointment?      @relation(fields: [linkedAppointmentId], references: [id])
+  bedAssignments      BedAssignment[]
+
+  @@index([status, severity, createdAt])
+}
+
+model BedAssignment {
+  id               String         @id @default(uuid()) @db.Uuid
+  bedId            String         @db.Uuid
+  patientId        String?        @db.Uuid
+  emergencyCaseId  String?        @db.Uuid
+  assignedAt       DateTime       @default(now())
+  releasedAt       DateTime?
+  assignedByUserId String         @db.Uuid
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  bed              Bed            @relation(fields: [bedId], references: [id])
+  patient          User?          @relation("BedAssignmentPatient", fields: [patientId], references: [id], onDelete: SetNull)
+  emergencyCase    EmergencyCase? @relation(fields: [emergencyCaseId], references: [id], onDelete: SetNull)
+  assignedBy       User           @relation("BedAssignmentAssignee", fields: [assignedByUserId], references: [id])
+
+  @@index([bedId, releasedAt])
+  @@index([patientId, releasedAt])
 }

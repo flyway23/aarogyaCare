@@ -42,3 +42,4 @@ api.interceptors.response.use(
 export const setAccessToken = (token) =>
   localStorage.setItem(accessTokenKey, token);
 export const clearAccessToken = () => localStorage.removeItem(accessTokenKey);
+export const getAccessToken = () => localStorage.getItem(accessTokenKey);

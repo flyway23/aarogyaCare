@@ -7,12 +7,20 @@ const worker = new Worker(
   async (job) => sendEmail(job.data),
   { connection: bullConnection('worker') },
 );
+const emergencyWorker = new Worker(
+  'emergency-alerts',
+  async (job) => sendEmail(job.data),
+  { connection: bullConnection('worker') },
+);
 worker.on('failed', (job, error) =>
   console.error(`Payment email job ${job?.id} failed`, error.message),
 );
-console.log('AarogyaCare payment email worker started');
+emergencyWorker.on('failed', (job, error) =>
+  console.error(`Emergency email job ${job?.id} failed`, error.message),
+);
+console.log('AarogyaCare email workers started');
 const shutdown = async () => {
-  await worker.close();
+  await Promise.all([worker.close(), emergencyWorker.close()]);
   process.exit(0);
 };
 process.on('SIGINT', shutdown);
