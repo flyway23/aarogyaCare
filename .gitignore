@@ -4,3 +4,4 @@ dist/
 apps/api/uploads/*
 !apps/api/uploads/.gitkeep
 coverage/
+apps/web/.edge-profile/

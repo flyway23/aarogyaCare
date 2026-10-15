@@ -1,0 +1,6 @@
+masterprompt.md
+.env
+apps/api/prisma/**/*.prisma
+apps/api/prisma/migrations/**
+apps/web/dist/**
+apps/web/.edge-profile/**

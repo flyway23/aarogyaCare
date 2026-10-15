@@ -8,11 +8,17 @@ import { redis } from './lib/redis.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
 import { HttpError } from './lib/httpError.js';
+import authRoutes from './modules/auth/routes.js';
+import patientRoutes from './modules/patients/routes.js';
+import adminRoutes from './modules/admin/routes.js';
 
 export const app = express();
 app.use(helmet());
 app.use(cors({ origin: env.WEB_ORIGIN }));
 app.use(express.json());
+app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get(
   '/api/health',

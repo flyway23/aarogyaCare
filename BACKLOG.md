@@ -1,4 +1,4 @@
 # Backlog
 
-- Phase 1: authentication, roles, patient profiles, audit logging, and role-based layouts.
-- Later phases: appointment booking, payments, beds and emergencies, document processing, doctor and patient portals, and administration, following `masterprompt.md`.
+- Next: Phase 2 doctors, schedules, appointments, and queue management.
+- Later phases: payments, beds and emergencies, document processing, doctor and patient portals, administration, and demo polish, following `masterprompt.md`.
