@@ -11,11 +11,21 @@ const DoctorLayout = lazy(() => import('./layouts/DoctorLayout.jsx'));
 const OperatorLayout = lazy(() => import('./layouts/OperatorLayout.jsx'));
 const AdminLayout = lazy(() => import('./layouts/AdminLayout.jsx'));
 const PatientHome = lazy(() => import('./pages/patient/PatientHome.jsx'));
-const PatientProfilePage = lazy(() => import('./pages/patient/PatientProfilePage.jsx'));
+const PatientProfilePage = lazy(
+  () => import('./pages/patient/PatientProfilePage.jsx'),
+);
 const BookingPage = lazy(() => import('./pages/patient/BookingPage.jsx'));
-const AppointmentsPage = lazy(() => import('./pages/patient/AppointmentsPage.jsx'));
+const AppointmentsPage = lazy(
+  () => import('./pages/patient/AppointmentsPage.jsx'),
+);
 const DocumentsPage = lazy(() => import('./pages/patient/DocumentsPage.jsx'));
 const DoctorHome = lazy(() => import('./pages/doctor/DoctorHome.jsx'));
+const DoctorPatientsPage = lazy(
+  () => import('./pages/doctor/DoctorPatientsPage.jsx'),
+);
+const DoctorPatientPage = lazy(
+  () => import('./pages/doctor/DoctorPatientPage.jsx'),
+);
 const OperatorHome = lazy(() => import('./pages/operator/OperatorHome.jsx'));
 const AdminHome = lazy(() => import('./pages/admin/AdminHome.jsx'));
 
@@ -34,7 +44,11 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/patient"
-          element={<ProtectedRoute roles={['patient']}><PatientLayout /></ProtectedRoute>}
+          element={
+            <ProtectedRoute roles={['patient']}>
+              <PatientLayout />
+            </ProtectedRoute>
+          }
         >
           <Route index element={<PatientHome />} />
           <Route path="profile" element={<PatientProfilePage />} />
@@ -44,19 +58,33 @@ export default function App() {
         </Route>
         <Route
           path="/doctor"
-          element={<ProtectedRoute roles={['doctor']}><DoctorLayout /></ProtectedRoute>}
+          element={
+            <ProtectedRoute roles={['doctor']}>
+              <DoctorLayout />
+            </ProtectedRoute>
+          }
         >
           <Route index element={<DoctorHome />} />
+          <Route path="patients" element={<DoctorPatientsPage />} />
+          <Route path="patients/:id" element={<DoctorPatientPage />} />
         </Route>
         <Route
           path="/operator"
-          element={<ProtectedRoute roles={['operator']}><OperatorLayout /></ProtectedRoute>}
+          element={
+            <ProtectedRoute roles={['operator']}>
+              <OperatorLayout />
+            </ProtectedRoute>
+          }
         >
           <Route index element={<OperatorHome />} />
         </Route>
         <Route
           path="/admin/*"
-          element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
         >
           <Route index element={<AdminHome />} />
         </Route>

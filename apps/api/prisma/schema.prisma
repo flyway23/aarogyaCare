@@ -128,6 +128,11 @@ model User {
   documents             Document[]
   timelineEvents        TimelineEvent[]
   visitSummaries        VisitSummary[]
+  patientConsents       Consent[]          @relation("PatientConsent")
+  doctorConsents        Consent[]          @relation("DoctorConsent")
+  consultationReportsAsPatient ConsultationReport[] @relation("ConsultationPatient")
+  consultationReportsAsDoctor  ConsultationReport[] @relation("ConsultationDoctor")
+  prescriptions                Prescription[]
 
   @@index([role, isActive])
 }
@@ -240,6 +245,7 @@ model Appointment {
   emergencyCase  EmergencyCase?
   documents      Document[]
   visitSummary   VisitSummary?
+  consultationReport ConsultationReport?
 
   @@index([doctorId, slotStart, status])
   @@index([patientId, slotStart])
@@ -412,4 +418,49 @@ model VisitSummary {
   updatedAt     DateTime    @updatedAt
   patient       User        @relation(fields: [patientId], references: [id], onDelete: Cascade)
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+}
+
+model ConsultationReport {
+  id            String         @id @default(uuid()) @db.Uuid
+  appointmentId String         @unique @db.Uuid
+  patientId     String         @db.Uuid
+  doctorId      String         @db.Uuid
+  diagnosis     String
+  notes         String
+  followUpDate  DateTime?      @db.Date
+  createdAt     DateTime       @default(now())
+  appointment   Appointment    @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient       User           @relation("ConsultationPatient", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        User           @relation("ConsultationDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  medicines     Prescription[]
+}
+
+model Prescription {
+  id                   String             @id @default(uuid()) @db.Uuid
+  consultationReportId String             @db.Uuid
+  patientId            String             @db.Uuid
+  medicine             String
+  dosage               String
+  frequency            String
+  duration             String
+  instructions         String?
+  createdAt            DateTime           @default(now())
+  report               ConsultationReport @relation(fields: [consultationReportId], references: [id], onDelete: Cascade)
+  patient              User               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  @@index([patientId, createdAt])
+  @@index([consultationReportId])
+}
+
+model Consent {
+  id        String   @id @default(uuid()) @db.Uuid
+  patientId String   @db.Uuid
+  doctorId  String   @db.Uuid
+  grantedAt DateTime @default(now())
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  patient   User     @relation("PatientConsent", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    User     @relation("DoctorConsent", fields: [doctorId], references: [id], onDelete: Cascade)
+  @@unique([patientId, doctorId])
+  @@index([doctorId, revokedAt])
 }

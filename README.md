@@ -90,6 +90,15 @@ The worker hashes files to detect duplicates, reads at most 10 PDF pages, runs O
 
 Three fake PDF samples (prescription, lab report, bill) and one fake lab image are included. Regenerate the PDFs with `node apps/api/samples/generate-samples.mjs`.
 
+## Phase 6 doctor portal
+
+- `GET /api/doctor/today`: the signed-in doctor's current-day appointments and active emergency cases, with emergencies ranked first.
+- `GET /api/doctor/patients` and `GET /api/doctor/patients/:id/records`: patients seen by that doctor; record reads are audit logged and require an appointment relationship. A revoked `Consent` record denies access.
+- `POST /api/consultations/:appointmentId/start` and `/end`: the assigned doctor advances a checked-in appointment to `IN_CONSULTATION`, then to `COMPLETED`. Completion emits `consultation.completed` and closes its queue entry.
+- `POST /api/consultations/:appointmentId/report`: creates one diagnosis/notes/follow-up report and its medicine rows for a completed appointment. Reports have no update or delete route.
+
+The doctor portal has today's queue, emergency cases, patient records with summary/source snippets/original files/timeline, the report form, and AVAILABLE/BUSY/AWAY controls. Consent records are enforced when revoked; patient-facing consent grant/revocation endpoints are scheduled for Phase 7.
+
 ## Checks
 
 - Run API tests: `npm.cmd test`.

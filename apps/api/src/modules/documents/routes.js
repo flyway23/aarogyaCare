@@ -127,6 +127,9 @@ router.get(
                 appointmentsAsPatient: {
                   some: { doctor: { userId: req.user.id } },
                 },
+                patientConsents: {
+                  none: { doctorId: req.user.id, revokedAt: { not: null } },
+                },
               },
             }
           : {};
@@ -160,6 +163,10 @@ const getAuthorized = async (req) => {
             select: { id: true },
             take: 1,
           },
+          patientConsents: {
+            where: { doctorId: req.user.id, revokedAt: { not: null } },
+            select: { id: true },
+          },
         },
       },
     },
@@ -169,7 +176,8 @@ const getAuthorized = async (req) => {
     req.user.role === 'admin' ||
     (req.user.role === 'patient' && doc.patientId === req.user.id) ||
     (req.user.role === 'doctor' &&
-      doc.patient.appointmentsAsPatient.length > 0);
+      doc.patient.appointmentsAsPatient.length > 0 &&
+      doc.patient.patientConsents.length === 0);
   if (!allowed) throw new HttpError(404, 'Document not found');
   return doc;
 };
@@ -219,6 +227,12 @@ router.get(
       where: { patientId: id, doctor: { userId: req.user.id } },
     });
     if (!allowed) throw new HttpError(404, 'Patient not found');
+    const revoked = await prisma.consent.findUnique({
+      where: { patientId_doctorId: { patientId: id, doctorId: req.user.id } },
+      select: { revokedAt: true },
+    });
+    if (revoked?.revokedAt)
+      throw new HttpError(403, 'Patient has revoked record access');
     const data = await prisma.document.findMany({
       where: {
         patientId: id,

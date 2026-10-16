@@ -4,7 +4,10 @@ export default function DoctorLayout() {
   return (
     <RoleShell
       title="Doctor portal"
-      links={[{ label: 'Overview', to: '/doctor', end: true }]}
+      links={[
+        { label: 'Today’s queue', to: '/doctor', end: true },
+        { label: 'My patients', to: '/doctor/patients' },
+      ]}
     />
   );
 }

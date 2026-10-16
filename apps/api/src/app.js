@@ -20,6 +20,7 @@ import bedRoutes from './modules/beds/routes.js';
 import emergencyRoutes from './modules/emergency/routes.js';
 import './modules/beds/events.js';
 import './modules/emergency/events.js';
+import doctorPortalRoutes from './modules/doctors/portalRoutes.js';
 import documentRoutes from './modules/documents/routes.js';
 
 export const app = express();
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', doctorRoutes);
+app.use('/api', doctorPortalRoutes);
 app.use('/api', appointmentRoutes);
 app.use('/api', queueRoutes);
 app.use('/api/payments', paymentRoutes);

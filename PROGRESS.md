@@ -8,6 +8,7 @@
 - Phase 3: Mock/Razorpay payments, receipts, refunds, payment email queue.
 - Phase 4: Beds, reservations, assignments, live emergency alerts.
 - Phase 5: Local document uploads, extraction worker, classifications, timeline, visit summaries.
+- Phase 6: Doctor queue and patient records, consultation workflow, reports/prescriptions, consent records.
 
 ## Decisions
 
@@ -20,7 +21,7 @@
 - Seeded demo roles share password `Pass@1234`.
 - Uploaded reports are stored under ignored `apps/api/uploads/`. The `documents` queue hashes files, reads up to 10 PDF pages, OCRs images, extracts rule-based values, creates timeline events, and updates appointment summaries.
 - Image OCR downloads English language data on first use and requires network access then. Extraction and summaries are demo aids; confirm findings against the original documents.
-- Doctor document access is appointment scoped. Consent and revocation controls are scheduled for Phase 6.
+- Doctor document access is appointment scoped; a revoked Consent record blocks access. Patient-facing consent grant/revocation is scheduled for Phase 7.
 
 ## How to run
 
@@ -43,10 +44,10 @@
 
 ## Checks
 
-- `npm.cmd test`: 27 API tests pass, including document PDF extraction, image OCR, duplicate detection, and earlier phase route/concurrency/socket/payment cases.
+- `npm.cmd test`: 28 API tests pass, including doctor patient scoping, consent revocation, consultation state/event handling, create-once reports, document extraction, image OCR, and earlier phase route/concurrency/socket/payment cases.
 - `npm.cmd run lint` and `npm.cmd run format:check` pass.
 - `npm.cmd --workspace apps/web run build` passes.
-- `npx.cmd prisma validate --schema apps/api/prisma/schema.prisma` passes; all eight migrations are applied.
+- `npx.cmd prisma validate --schema apps/api/prisma/schema.prisma` passes; all nine migrations are applied.
 - `node apps/api/samples/worker-smoke.mjs` verified processing by the separate worker.
 
 ## Phase 5 route protection
@@ -57,6 +58,12 @@
 - `GET /api/patients/:id/search?q=`: doctor only and appointment scoped.
 - Document IDs are validated. The list endpoint does not return extracted text. Doctors have no document mutation route.
 
+## Phase 6 route protection
+
+- All doctor portal routes require the doctor role. Patient records and consultation endpoints check that the appointment belongs to the signed-in doctor.
+- `GET /api/doctor/patients/:id/records` is audit logged, and a revoked patient-doctor Consent blocks the request.
+- Consultation start requires `CHECKED_IN`; end requires `IN_CONSULTATION`. Reports can only be created once for a completed appointment; no report/document/profile update route is exposed to doctors.
+
 ## Next phase
 
-- Phase 6: Doctor portal. Begin after the user says `continue`.
+- Phase 7: Patient portal completion. Begin after the user says `continue`.
