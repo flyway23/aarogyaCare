@@ -9,6 +9,7 @@
 - Phase 4: Beds, reservations, assignments, live emergency alerts.
 - Phase 5: Local document uploads, extraction worker, classifications, timeline, visit summaries.
 - Phase 6: Doctor queue and patient records, consultation workflow, reports/prescriptions, consent records.
+- Final demo phase (Phase 9): expanded fictional seed data, read-only admin overview, README architecture/setup/demo path, and final workflow checks.
 
 ## Decisions
 
@@ -19,9 +20,10 @@
 - Bed changes use row locks and PostgreSQL transactions; reservations expire after 30 minutes. Appointment holds expire after five minutes.
 - Dates and schedule weekdays use Asia/Kolkata; timestamps are stored in UTC.
 - Seeded demo roles share password `Pass@1234`.
+- The requested jump to the final phase intentionally skipped Phase 7 and Phase 8. Patient-facing consent management and full admin CRUD remain deferred; Phase 9 only added the read-only admin overview required by the demo path.
 - Uploaded reports are stored under ignored `apps/api/uploads/`. The `documents` queue hashes files, reads up to 10 PDF pages, OCRs images, extracts rule-based values, creates timeline events, and updates appointment summaries.
 - Image OCR downloads English language data on first use and requires network access then. Extraction and summaries are demo aids; confirm findings against the original documents.
-- Doctor document access is appointment scoped; a revoked Consent record blocks access. Patient-facing consent grant/revocation is scheduled for Phase 7.
+- Doctor document access is appointment scoped; a revoked Consent record blocks access. Patient-facing consent grant/revocation is deferred.
 
 ## How to run
 
@@ -66,4 +68,4 @@
 
 ## Next phase
 
-- Phase 7: Patient portal completion. Begin after the user says `continue`.
+- The requested final demo phase is complete. Optional Phase 7 and Phase 8 work remains deferred unless requested.

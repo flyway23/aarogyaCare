@@ -1,6 +1,20 @@
 # AarogyaCare
 
-AarogyaCare is a single-hospital management web app built as a college project demo. It is being developed in phases; see [PROGRESS.md](PROGRESS.md) for the current phase and setup state.
+AarogyaCare is a single-hospital management web app built as a college project demo. It includes patient booking and mock checkout, operator queue/bed/emergency handling, doctor records and consultation summaries, and a read-only admin overview. The final demo phase was completed directly; optional patient-consent controls and full admin CRUD from the skipped intermediate phases are not included.
+
+## Architecture
+
+```text
+Browser (React + Vite :5173)
+          | /api proxy, JWT
+          v
+Express API (:3000) ---- PostgreSQL (:5432)
+          |                       |
+          +---- Redis (:6379)     +---- Prisma
+                   |
+             BullMQ worker
+       (email + document OCR)
+```
 
 ## Setup
 
@@ -11,7 +25,7 @@ Requirements: Node.js 20, npm, and Docker Desktop with Compose.
 3. Install dependencies: `npm.cmd install` (PowerShell) or `npm install`.
 4. Generate the Prisma client: `npx.cmd prisma generate --schema apps/api/prisma/schema.prisma`.
 5. Apply all database migrations: `npx.cmd prisma migrate deploy --schema apps/api/prisma/schema.prisma`.
-6. Seed demo accounts, specialties, doctors, and schedules: `npm.cmd --workspace apps/api run db:seed`.
+6. Seed demo accounts, 10 doctors, 3 specialties, 30 beds, appointments, an emergency, and fictional records: `npm.cmd --workspace apps/api run db:seed`.
 7. Start the API, email worker, and web app in separate terminals: `npm.cmd run dev:api`, `npm.cmd run dev:worker`, and `npm.cmd run dev:web`.
 8. Open http://localhost:5173.
 
@@ -24,11 +38,22 @@ Patient documents are uploaded from `/patient/book` after reserving a slot or fr
 All seeded accounts use password `Pass@1234`:
 
 - Admin: `admin@aarogyacare.demo`
-- Doctors: `doctor1@aarogyacare.demo`, `doctor2@aarogyacare.demo`
+- Doctors: `doctor1@aarogyacare.demo` through `doctor10@aarogyacare.demo`
 - Operator: `operator@aarogyacare.demo`
 - Patient: `patient@aarogyacare.demo`
 
 The web app redirects signed-in users to their role portal. Patients can view and update their profile at `/patient/profile`, book a doctor at `/patient/book`, and view, pay for, cancel, or print appointment receipts at `/patient/appointments`. Operators can book walk-ins, record cash/UPI/card payments, and manage the day's queue from `/operator`.
+
+## Five-minute demo
+
+1. Sign in as `patient@aarogyacare.demo` / `Pass@1234`; open **Book appointment**, choose a specialty, doctor, and available future slot, then book it.
+2. On the appointment page, pay using mock checkout. The demo records a successful payment without a gateway call; you can print the receipt.
+3. Open **Urgent assistance**, submit a fictional low-severity case, and confirm the request appears in the operator emergency panel.
+4. Open **Documents** and upload `apps/api/samples/fake-lab-report.pdf`. If linking a visit, choose the appointment you just booked. The worker processes it; without the worker, it remains queued.
+5. Sign out and sign in as `doctor1@aarogyacare.demo`. Open **My patients** → Demo Patient → review the fictional seeded summary and lab report. The newly uploaded record also appears after processing because the doctor has an appointment relationship.
+6. Sign out and sign in as `admin@aarogyacare.demo`; the **Overview** panel shows live aggregate counts. It intentionally contains no clinical record details.
+
+All seeded patient, appointment, emergency, document, and consultation data are fictional. The demo emergency does not dispatch an ambulance.
 
 ## Phase 1 API routes
 
@@ -36,7 +61,7 @@ The web app redirects signed-in users to their role portal. Patients can view an
 - Refresh-cookie routes: `POST /api/auth/refresh`, `POST /api/auth/logout`.
 - Authenticated, any of the four roles: `GET /api/auth/me`.
 - Authenticated patient only: `GET /api/patients/me/profile`, `PUT /api/patients/me/profile`.
-- Authenticated admin only: `GET /api/admin/session` (role access check for the admin portal).
+- Authenticated admin only: `GET /api/admin/session` and `GET /api/admin/overview` (aggregate counts; no patient clinical data).
 - Public system check: `GET /api/health`.
 
 Access tokens last 15 minutes. Refresh tokens are HTTP-only cookies, rotated on refresh and revoked on logout. In development without SMTP settings, password reset instructions (including the one-time token) are printed to the API console.
@@ -76,7 +101,7 @@ The confirmation endpoint used in Phase 2 was removed to prevent confirming appo
 
 The operator portal has a live bed board and emergency dashboard. Socket.IO verifies the access JWT and only operator, doctor, and admin connections can join the `staff` room. Bed counts and metadata-only emergency alerts are broadcast live; authorized staff load full emergency details through the API. New emergency emails are queued for `EMERGENCY_DESK_EMAIL`; configure SMTP in `.env` for actual delivery. In development, email bodies are omitted from console output.
 
-The seed creates five wards and ten available beds for the demo. The patient portal has an urgent assistance form; it alerts the hospital team but does not arrange an ambulance.
+The seed creates five wards and thirty available beds for the demo. The patient portal has an urgent assistance form; it alerts the hospital team but does not arrange an ambulance.
 
 ## Phase 5 document pipeline
 
@@ -110,7 +135,7 @@ The API tests use the local PostgreSQL database and seeded doctor, patient, and 
 
 ## Configuration
 
-See `.env.example`. `MOCK_PAYMENTS=true` is selected for the demo.
+Copy `.env.example` and set these local values as needed: `DATABASE_URL` for PostgreSQL, `REDIS_URL` for Redis, `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` for local token signing, `WEB_ORIGIN` for the browser origin, and `MOCK_PAYMENTS=true` for demo checkout. `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, and `EMERGENCY_DESK_EMAIL` configure real email delivery; leave SMTP blank for local console delivery. The `RAZORPAY_*` values are only needed to exercise Razorpay test mode. Never commit `.env`.
 
 ## Disclaimer
 

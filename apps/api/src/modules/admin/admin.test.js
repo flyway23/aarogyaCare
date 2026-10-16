@@ -4,7 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { env } from '../../config/env.js';
 
 vi.mock('../../lib/prisma.js', () => ({
-  prisma: { user: { findUnique: vi.fn() } },
+  prisma: {
+    user: { findUnique: vi.fn() },
+    doctorProfile: { count: vi.fn() },
+    appointment: { count: vi.fn() },
+    bed: { groupBy: vi.fn() },
+    emergencyCase: { count: vi.fn() },
+    document: { count: vi.fn() },
+  },
 }));
 vi.mock('../../lib/redis.js', () => ({
   redis: {
@@ -34,6 +41,13 @@ beforeEach(() => {
     isActive: true,
     deletedAt: null,
   });
+  prisma.doctorProfile.count.mockResolvedValue(10);
+  prisma.appointment.count.mockResolvedValue(3);
+  prisma.bed.groupBy.mockResolvedValue([
+    { status: 'AVAILABLE', _count: { _all: 30 } },
+  ]);
+  prisma.emergencyCase.count.mockResolvedValue(1);
+  prisma.document.count.mockResolvedValue(0);
 });
 
 describe('admin session permission', () => {
@@ -52,5 +66,24 @@ describe('admin session permission', () => {
       .set('Authorization', `Bearer ${tokenFor('patient')}`);
     expect(response.status).toBe(403);
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns aggregate dashboard counts to admins and blocks patients', async () => {
+    const admin = await request(app)
+      .get('/api/admin/overview')
+      .set('Authorization', `Bearer ${tokenFor('admin')}`);
+    expect(admin.status).toBe(200);
+    expect(admin.body.data).toEqual({
+      doctors: 10,
+      appointments: 3,
+      beds: { available: 30 },
+      openEmergencies: 1,
+      failedDocuments: 0,
+    });
+    expect(admin.body.data.patientRecords).toBeUndefined();
+    const patient = await request(app)
+      .get('/api/admin/overview')
+      .set('Authorization', `Bearer ${tokenFor('patient')}`);
+    expect(patient.status).toBe(403);
   });
 });
