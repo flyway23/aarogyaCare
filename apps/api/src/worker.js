@@ -2,6 +2,7 @@ import { Worker } from 'bullmq';
 import { bullConnection } from './lib/queue.js';
 import { sendEmail } from './lib/mailer.js';
 import { processDocument } from './modules/documents/processor.js';
+import { prisma } from './lib/prisma.js';
 
 const worker = new Worker(
   'payment-emails',
@@ -20,6 +21,17 @@ const documentsWorker = new Worker(
     connection: bullConnection('worker'),
     concurrency: 1,
   },
+);
+const appointmentReminderWorker = new Worker(
+  'appointment-reminders',
+  async (job) => {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: job.data.appointmentId },
+      select: { status: true },
+    });
+    if (appointment?.status === 'CONFIRMED') await sendEmail(job.data);
+  },
+  { connection: bullConnection('worker') },
 );
 worker.on('failed', (job, error) =>
   console.error(`Payment email job ${job?.id} failed`, error.message),
@@ -45,6 +57,7 @@ const shutdown = async () => {
     worker.close(),
     emergencyWorker.close(),
     documentsWorker.close(),
+    appointmentReminderWorker.close(),
   ]);
   process.exit(0);
 };

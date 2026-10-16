@@ -9,7 +9,9 @@
 - Phase 4: Beds, reservations, assignments, live emergency alerts.
 - Phase 5: Local document uploads, extraction worker, classifications, timeline, visit summaries.
 - Phase 6: Doctor queue and patient records, consultation workflow, reports/prescriptions, consent records.
-- Final demo phase (Phase 9): expanded fictional seed data, read-only admin overview, README architecture/setup/demo path, and final workflow checks.
+- Phase 7: Patient records and JSON export, post-consultation chat, feedback, rescheduling, notifications, consent/access history, delayed appointment reminders.
+- Phase 8: Whitelisted metadata-driven admin CRUD, dashboard, CSV exports, audit logging, failed document retry.
+- Phase 9: Expanded fictional demo seed data, README architecture/setup/demo path, disclaimer, and final workflow checks.
 
 ## Decisions
 
@@ -20,10 +22,10 @@
 - Bed changes use row locks and PostgreSQL transactions; reservations expire after 30 minutes. Appointment holds expire after five minutes.
 - Dates and schedule weekdays use Asia/Kolkata; timestamps are stored in UTC.
 - Seeded demo roles share password `Pass@1234`.
-- The requested jump to the final phase intentionally skipped Phase 7 and Phase 8. Patient-facing consent management and full admin CRUD remain deferred; Phase 9 only added the read-only admin overview required by the demo path.
+- The earlier jump to Phase 9 left Phase 7 and Phase 8 deferred. This continuation completed both phases and retained Phase 9. Admin CRUD is limited to its explicit whitelist; Payments and AuditLog are read-only.
 - Uploaded reports are stored under ignored `apps/api/uploads/`. The `documents` queue hashes files, reads up to 10 PDF pages, OCRs images, extracts rule-based values, creates timeline events, and updates appointment summaries.
 - Image OCR downloads English language data on first use and requires network access then. Extraction and summaries are demo aids; confirm findings against the original documents.
-- Doctor document access is appointment scoped; a revoked Consent record blocks access. Patient-facing consent grant/revocation is deferred.
+- Doctor document access is appointment scoped; patient-managed Consent grant/revocation is enforced on doctor record access.
 
 ## How to run
 
@@ -41,15 +43,15 @@
 - The prompt specifies Node 20; this machine currently has Node 24.21.0.
 - Latest npm install reported 6 vulnerabilities (1 moderate, 3 high, 2 critical). Review with `npm audit` before deployment.
 - `prisma migrate dev` cannot create a shadow database with the configured user's permissions. Use the committed migrations with `prisma migrate deploy`.
-- Doctor consent revocation is not implemented yet; it belongs to Phase 6.
+- Reminder emails are delivered only when the queued appointment is still confirmed at dispatch time.
 - Razorpay live gateway calls need test keys and were not exercised.
 
 ## Checks
 
-- `npm.cmd test`: 28 API tests pass, including doctor patient scoping, consent revocation, consultation state/event handling, create-once reports, document extraction, image OCR, and earlier phase route/concurrency/socket/payment cases.
+- `npm.cmd test`: 35 API tests pass, including Phase 7 patient data/chat/consent/rescheduling and Phase 8 admin CRUD/permission/export workflows.
 - `npm.cmd run lint` and `npm.cmd run format:check` pass.
 - `npm.cmd --workspace apps/web run build` passes.
-- `npx.cmd prisma validate --schema apps/api/prisma/schema.prisma` passes; all nine migrations are applied.
+- `npx.cmd prisma validate --schema apps/api/prisma/schema.prisma` passes; all ten migrations are applied.
 - `node apps/api/samples/worker-smoke.mjs` verified processing by the separate worker.
 
 ## Phase 5 route protection
@@ -66,6 +68,18 @@
 - `GET /api/doctor/patients/:id/records` is audit logged, and a revoked patient-doctor Consent blocks the request.
 - Consultation start requires `CHECKED_IN`; end requires `IN_CONSULTATION`. Reports can only be created once for a completed appointment; no report/document/profile update route is exposed to doctors.
 
+## Phase 7 route protection
+
+- `/api/records` and `/export`, feedback, consent, and access history are patient-only and scope by signed-in patient ID.
+- Chat is patient/doctor only, requires a completed appointment, and checks the patient or assigned doctor on every request. Operators/admins cannot read chat.
+- Notifications are authenticated for all four roles and always filter by the signed-in user ID.
+- Rescheduling is patient-only, checks ownership and available schedule slots, and uses a serializable transaction.
+
+## Phase 8 route protection
+
+- Every `/api/admin/*` route requires auth and the admin role, including resource CRUD, metadata, dashboard, CSV, feedback moderation, and document retry.
+- Resource names and fields are allow-listed; Payment and AuditLog resources are read-only. Admin writes are audit logged. User removal is soft-delete with restore; admins cannot deactivate or delete their own account.
+
 ## Next phase
 
-- The requested final demo phase is complete. Optional Phase 7 and Phase 8 work remains deferred unless requested.
+- Phases 0–9 are complete for the college demo scope. Remaining backlog is limited to real-deployment configuration and review.

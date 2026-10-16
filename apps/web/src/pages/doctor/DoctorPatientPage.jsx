@@ -8,6 +8,7 @@ import {
 import { getDocumentFile } from '../../api/documents.js';
 import Spinner from '../../components/Spinner.jsx';
 import Toast from '../../components/Toast.jsx';
+import AppointmentChat from '../../components/AppointmentChat.jsx';
 
 const dateLabel = (value) =>
   new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' });
@@ -31,6 +32,7 @@ export default function DoctorPatientPage() {
   const [notes, setNotes] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
   const [medicines, setMedicines] = useState([]);
+  const [chatAppointmentId, setChatAppointmentId] = useState('');
   const report = useMutation({
     mutationFn: createConsultationReport,
     onSuccess: () => {
@@ -294,6 +296,38 @@ export default function DoctorPatientPage() {
               : 'Save report (cannot be edited)'}
           </button>
         </form>
+      </article>
+      <article className="mt-5 rounded-2xl border border-emerald-950/10 bg-white p-5">
+        <h2 className="text-lg font-semibold text-ink">
+          Completed visit chats
+        </h2>
+        <div className="mt-3 grid gap-3">
+          {record.appointments.map((item) => (
+            <div key={item.id} className="rounded-xl bg-slate-50 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium">
+                  {dateLabel(item.slotStart)}
+                </p>
+                <button
+                  onClick={() =>
+                    setChatAppointmentId(
+                      chatAppointmentId === item.id ? '' : item.id,
+                    )
+                  }
+                  className="text-sm font-semibold text-forest"
+                >
+                  {chatAppointmentId === item.id ? 'Close chat' : 'Open chat'}
+                </button>
+              </div>
+              {chatAppointmentId === item.id && (
+                <AppointmentChat appointmentId={item.id} />
+              )}
+            </div>
+          ))}
+          {!record.appointments.length && (
+            <p className="text-sm text-slate-500">No completed visits yet.</p>
+          )}
+        </div>
       </article>
       <article className="mt-5 rounded-2xl border border-emerald-950/10 bg-white p-5">
         <h2 className="text-lg font-semibold text-ink">Patient timeline</h2>

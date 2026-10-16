@@ -19,6 +19,16 @@ const AppointmentsPage = lazy(
   () => import('./pages/patient/AppointmentsPage.jsx'),
 );
 const DocumentsPage = lazy(() => import('./pages/patient/DocumentsPage.jsx'));
+const PatientRecordsPage = lazy(
+  () => import('./pages/patient/PatientRecordsPage.jsx'),
+);
+const PatientAccessPage = lazy(
+  () => import('./pages/patient/PatientAccessPage.jsx'),
+);
+const PatientNotificationsPage = lazy(
+  () => import('./pages/patient/PatientNotificationsPage.jsx'),
+);
+const ReschedulePage = lazy(() => import('./pages/patient/ReschedulePage.jsx'));
 const DoctorHome = lazy(() => import('./pages/doctor/DoctorHome.jsx'));
 const DoctorPatientsPage = lazy(
   () => import('./pages/doctor/DoctorPatientsPage.jsx'),
@@ -28,6 +38,12 @@ const DoctorPatientPage = lazy(
 );
 const OperatorHome = lazy(() => import('./pages/operator/OperatorHome.jsx'));
 const AdminHome = lazy(() => import('./pages/admin/AdminHome.jsx'));
+const AdminResourcesPage = lazy(
+  () => import('./pages/admin/AdminResourcesPage.jsx'),
+);
+const AdminFailedDocumentsPage = lazy(
+  () => import('./pages/admin/AdminFailedDocumentsPage.jsx'),
+);
 
 const HomeRedirect = () => {
   const { user, loading } = useAuth();
@@ -55,6 +71,10 @@ export default function App() {
           <Route path="book" element={<BookingPage />} />
           <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="documents" element={<DocumentsPage />} />
+          <Route path="records" element={<PatientRecordsPage />} />
+          <Route path="access" element={<PatientAccessPage />} />
+          <Route path="notifications" element={<PatientNotificationsPage />} />
+          <Route path="reschedule/:id" element={<ReschedulePage />} />
         </Route>
         <Route
           path="/doctor"
@@ -87,6 +107,11 @@ export default function App() {
           }
         >
           <Route index element={<AdminHome />} />
+          <Route path="resources" element={<AdminResourcesPage />} />
+          <Route
+            path="failed-documents"
+            element={<AdminFailedDocumentsPage />}
+          />
         </Route>
         <Route path="*" element={<HomeRedirect />} />
       </Routes>

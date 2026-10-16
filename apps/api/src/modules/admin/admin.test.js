@@ -8,6 +8,8 @@ vi.mock('../../lib/prisma.js', () => ({
     user: { findUnique: vi.fn() },
     doctorProfile: { count: vi.fn() },
     appointment: { count: vi.fn() },
+    queueEntry: { findMany: vi.fn() },
+    payment: { aggregate: vi.fn() },
     bed: { groupBy: vi.fn() },
     emergencyCase: { count: vi.fn() },
     document: { count: vi.fn() },
@@ -43,6 +45,8 @@ beforeEach(() => {
   });
   prisma.doctorProfile.count.mockResolvedValue(10);
   prisma.appointment.count.mockResolvedValue(3);
+  prisma.queueEntry.findMany.mockResolvedValue([]);
+  prisma.payment.aggregate.mockResolvedValue({ _sum: { amountInr: 0 } });
   prisma.bed.groupBy.mockResolvedValue([
     { status: 'AVAILABLE', _count: { _all: 30 } },
   ]);
@@ -73,9 +77,12 @@ describe('admin session permission', () => {
       .get('/api/admin/overview')
       .set('Authorization', `Bearer ${tokenFor('admin')}`);
     expect(admin.status).toBe(200);
-    expect(admin.body.data).toEqual({
+    expect(admin.body.data).toMatchObject({
       doctors: 10,
-      appointments: 3,
+      appointmentsToday: 3,
+      averageWaitMinutes: 0,
+      bedOccupancyPercent: 0,
+      revenueThisMonthInr: 0,
       beds: { available: 30 },
       openEmergencies: 1,
       failedDocuments: 0,

@@ -22,6 +22,8 @@ import './modules/beds/events.js';
 import './modules/emergency/events.js';
 import doctorPortalRoutes from './modules/doctors/portalRoutes.js';
 import documentRoutes from './modules/documents/routes.js';
+import patientFeatureRoutes from './modules/patientFeatures/routes.js';
+import './modules/patientFeatures/events.js';
 
 export const app = express();
 app.use(helmet());
@@ -44,6 +46,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/beds', bedRoutes);
 app.use('/api', emergencyRoutes);
 app.use('/api', documentRoutes);
+app.use('/api', patientFeatureRoutes);
 
 app.get(
   '/api/health',

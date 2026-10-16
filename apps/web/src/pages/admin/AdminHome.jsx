@@ -3,6 +3,7 @@ import { getAdminOverview } from '../../api/admin.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import Toast from '../../components/Toast.jsx';
+import { Link } from 'react-router-dom';
 
 const number = (value) => new Intl.NumberFormat().format(value ?? 0);
 
@@ -25,7 +26,10 @@ export default function AdminHome() {
 
   const stats = [
     ['Doctors', overview.data.doctors],
-    ['Appointments', overview.data.appointments],
+    ['Appointments today', overview.data.appointmentsToday],
+    ['Average wait', `${overview.data.averageWaitMinutes} min`],
+    ['Bed occupancy', `${overview.data.bedOccupancyPercent}%`],
+    ['Revenue this month', `₹${number(overview.data.revenueThisMonthInr)}`],
     ['Available beds', overview.data.beds.available],
     ['Open emergencies', overview.data.openEmergencies],
     ['Documents needing review', overview.data.failedDocuments],
@@ -58,6 +62,20 @@ export default function AdminHome() {
         Demo data is fictional. This overview does not expose patient clinical
         records.
       </p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          to="/admin/resources"
+          className="rounded-lg bg-forest px-4 py-2 text-sm font-semibold text-white"
+        >
+          Manage resources
+        </Link>
+        <Link
+          to="/admin/failed-documents"
+          className="rounded-lg border px-4 py-2 text-sm font-semibold text-forest"
+        >
+          Failed document jobs ({overview.data.failedDocuments})
+        </Link>
+      </div>
     </section>
   );
 }

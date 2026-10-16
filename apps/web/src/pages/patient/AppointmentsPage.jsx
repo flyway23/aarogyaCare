@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import {
   cancelAppointment,
   getMyAppointments,
@@ -154,6 +155,14 @@ export default function AppointmentsPage() {
                   View receipt
                 </button>
               )}
+            {['HELD', 'CONFIRMED'].includes(appointment.status) && (
+              <Link
+                to={`/patient/reschedule/${appointment.id}`}
+                className="mt-4 mr-2 inline-flex rounded-xl border border-forest px-4 py-2 text-sm font-semibold text-forest"
+              >
+                Reschedule
+              </Link>
+            )}
             {['HELD', 'CONFIRMED'].includes(appointment.status) && (
               <button
                 type="button"

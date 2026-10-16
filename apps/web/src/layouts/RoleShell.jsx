@@ -75,9 +75,10 @@ export default function RoleShell({ title, links }) {
         <Outlet />
       </main>
       <footer className="border-t border-emerald-950/10 bg-white px-5 py-5 text-center text-xs leading-5 text-slate-500">
-        AarogyaCare is a college project demo, not a certified medical device.
-        Confirm all summaries with original records; clinical decisions belong
-        to qualified doctors.
+        AarogyaCare is a college project, not a certified medical device.
+        Machine-generated summaries are decision support only; doctors make all
+        clinical decisions. A real deployment would need privacy and compliance
+        review (in India: DPDP Act and ABDM guidelines).
       </footer>
     </div>
   );

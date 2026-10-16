@@ -277,7 +277,7 @@ export async function createConsultationReport(
   if (existing)
     throw new HttpError(409, 'A report already exists for this appointment');
   try {
-    return await prisma.consultationReport.create({
+    const report = await prisma.consultationReport.create({
       data: {
         appointmentId,
         patientId: appointment.patientId,
@@ -296,6 +296,11 @@ export async function createConsultationReport(
       },
       include: { medicines: true },
     });
+    eventBus.emit('consultation.report.ready', {
+      patientId: appointment.patientId,
+      appointmentId,
+    });
+    return report;
   } catch (error) {
     if (error.code === 'P2002')
       throw new HttpError(409, 'A report already exists for this appointment');

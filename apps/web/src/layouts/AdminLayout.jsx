@@ -4,7 +4,11 @@ export default function AdminLayout() {
   return (
     <RoleShell
       title="Admin portal"
-      links={[{ label: 'Overview', to: '/admin', end: true }]}
+      links={[
+        { label: 'Overview', to: '/admin', end: true },
+        { label: 'Resources', to: '/admin/resources' },
+        { label: 'Failed documents', to: '/admin/failed-documents' },
+      ]}
     />
   );
 }

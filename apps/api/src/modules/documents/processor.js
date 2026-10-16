@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { PDFParse } from 'pdf-parse';
 import { createWorker } from 'tesseract.js';
 import { prisma } from '../../lib/prisma.js';
+import { eventBus } from '../../lib/eventBus.js';
 
 const classify = (text) => {
   const t = text.toLowerCase();
@@ -173,5 +174,9 @@ export async function processDocument(documentId) {
         update: { content },
       });
     }
+  });
+  eventBus.emit('document.processed', {
+    documentId: doc.id,
+    patientId: doc.patientId,
   });
 }

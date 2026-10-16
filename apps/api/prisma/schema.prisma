@@ -105,34 +105,39 @@ enum DocumentType {
 }
 
 model User {
-  id                    String          @id @default(uuid()) @db.Uuid
-  email                 String          @unique
-  passwordHash          String
-  name                  String
-  phone                 String?
-  role                  Role
-  isActive              Boolean         @default(true)
-  deletedAt             DateTime?
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-  patientProfile        PatientProfile?
-  auditLogs             AuditLog[]
-  doctorProfile         DoctorProfile?
-  appointmentsAsPatient Appointment[]   @relation("AppointmentPatient")
-  appointmentsBooked    Appointment[]   @relation("AppointmentBookedBy")
-  bedAssignments        BedAssignment[] @relation("BedAssignmentAssignee")
-  bedAssignmentsFor     BedAssignment[] @relation("BedAssignmentPatient")
-  emergenciesRaised     EmergencyCase[] @relation("EmergencyRaisedBy")
-  emergenciesAccepted   EmergencyCase[] @relation("EmergencyAcceptedBy")
-  emergencyCases        EmergencyCase[] @relation("EmergencyPatient")
-  documents             Document[]
-  timelineEvents        TimelineEvent[]
-  visitSummaries        VisitSummary[]
-  patientConsents       Consent[]          @relation("PatientConsent")
-  doctorConsents        Consent[]          @relation("DoctorConsent")
+  id                           String               @id @default(uuid()) @db.Uuid
+  email                        String               @unique
+  passwordHash                 String
+  name                         String
+  phone                        String?
+  role                         Role
+  isActive                     Boolean              @default(true)
+  deletedAt                    DateTime?
+  createdAt                    DateTime             @default(now())
+  updatedAt                    DateTime             @updatedAt
+  patientProfile               PatientProfile?
+  auditLogs                    AuditLog[]
+  doctorProfile                DoctorProfile?
+  appointmentsAsPatient        Appointment[]        @relation("AppointmentPatient")
+  appointmentsBooked           Appointment[]        @relation("AppointmentBookedBy")
+  bedAssignments               BedAssignment[]      @relation("BedAssignmentAssignee")
+  bedAssignmentsFor            BedAssignment[]      @relation("BedAssignmentPatient")
+  emergenciesRaised            EmergencyCase[]      @relation("EmergencyRaisedBy")
+  emergenciesAccepted          EmergencyCase[]      @relation("EmergencyAcceptedBy")
+  emergencyCases               EmergencyCase[]      @relation("EmergencyPatient")
+  documents                    Document[]
+  timelineEvents               TimelineEvent[]
+  visitSummaries               VisitSummary[]
+  patientConsents              Consent[]            @relation("PatientConsent")
+  doctorConsents               Consent[]            @relation("DoctorConsent")
   consultationReportsAsPatient ConsultationReport[] @relation("ConsultationPatient")
   consultationReportsAsDoctor  ConsultationReport[] @relation("ConsultationDoctor")
   prescriptions                Prescription[]
+  chatThreadsAsPatient         ChatThread[]         @relation("ChatPatient")
+  chatThreadsAsDoctor          ChatThread[]         @relation("ChatDoctor")
+  chatMessages                 ChatMessage[]
+  feedbacks                    Feedback[]
+  notifications                Notification[]
 
   @@index([role, isActive])
 }
@@ -225,27 +230,29 @@ model DoctorLeave {
 }
 
 model Appointment {
-  id             String            @id @default(uuid()) @db.Uuid
-  patientId      String            @db.Uuid
-  doctorId       String            @db.Uuid
-  slotStart      DateTime
-  slotEnd        DateTime
-  status         AppointmentStatus @default(HELD)
-  reason         String
-  heldUntil      DateTime?
-  bookedByUserId String            @db.Uuid
-  isEmergency    Boolean           @default(false)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  patient        User              @relation("AppointmentPatient", fields: [patientId], references: [id])
-  doctor         DoctorProfile     @relation(fields: [doctorId], references: [id])
-  bookedBy       User              @relation("AppointmentBookedBy", fields: [bookedByUserId], references: [id])
-  queueEntry     QueueEntry?
-  payment        Payment?
-  emergencyCase  EmergencyCase?
-  documents      Document[]
-  visitSummary   VisitSummary?
+  id                 String              @id @default(uuid()) @db.Uuid
+  patientId          String              @db.Uuid
+  doctorId           String              @db.Uuid
+  slotStart          DateTime
+  slotEnd            DateTime
+  status             AppointmentStatus   @default(HELD)
+  reason             String
+  heldUntil          DateTime?
+  bookedByUserId     String              @db.Uuid
+  isEmergency        Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  patient            User                @relation("AppointmentPatient", fields: [patientId], references: [id])
+  doctor             DoctorProfile       @relation(fields: [doctorId], references: [id])
+  bookedBy           User                @relation("AppointmentBookedBy", fields: [bookedByUserId], references: [id])
+  queueEntry         QueueEntry?
+  payment            Payment?
+  emergencyCase      EmergencyCase?
+  documents          Document[]
+  visitSummary       VisitSummary?
   consultationReport ConsultationReport?
+  chatThread         ChatThread?
+  feedback           Feedback?
 
   @@index([doctorId, slotStart, status])
   @@index([patientId, slotStart])
@@ -363,23 +370,24 @@ model BedAssignment {
 }
 
 model Document {
-  id             String           @id @default(uuid()) @db.Uuid
-  patientId      String           @db.Uuid
-  appointmentId  String?          @db.Uuid
+  id             String               @id @default(uuid()) @db.Uuid
+  patientId      String               @db.Uuid
+  appointmentId  String?              @db.Uuid
   originalName   String
   mimeType       String
   storagePath    String
   sha256         String?
-  status         DocumentStatus    @default(QUEUED)
+  status         DocumentStatus       @default(QUEUED)
   type           DocumentType?
-  extractedText  String            @default("")
+  extractedText  String               @default("")
   failReason     String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  patient        User              @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment    Appointment?      @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  patient        User                 @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment    Appointment?         @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   extractions    DocumentExtraction[]
   timelineEvents TimelineEvent[]
+
   @@index([patientId, createdAt])
   @@index([appointmentId])
 }
@@ -394,18 +402,20 @@ model DocumentExtraction {
   isAbnormal    Boolean  @default(false)
   createdAt     DateTime @default(now())
   document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId, kind])
 }
 
 model TimelineEvent {
-  id          String    @id @default(uuid()) @db.Uuid
-  patientId   String    @db.Uuid
-  documentId  String    @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  patientId   String   @db.Uuid
+  documentId  String   @db.Uuid
   eventDate   DateTime
   description String
-  createdAt   DateTime  @default(now())
-  patient     User      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  patient     User     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([patientId, eventDate])
 }
 
@@ -447,20 +457,73 @@ model Prescription {
   createdAt            DateTime           @default(now())
   report               ConsultationReport @relation(fields: [consultationReportId], references: [id], onDelete: Cascade)
   patient              User               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
   @@index([patientId, createdAt])
   @@index([consultationReportId])
 }
 
 model Consent {
-  id        String   @id @default(uuid()) @db.Uuid
-  patientId String   @db.Uuid
-  doctorId  String   @db.Uuid
-  grantedAt DateTime @default(now())
+  id        String    @id @default(uuid()) @db.Uuid
+  patientId String    @db.Uuid
+  doctorId  String    @db.Uuid
+  grantedAt DateTime  @default(now())
   revokedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  patient   User     @relation("PatientConsent", fields: [patientId], references: [id], onDelete: Cascade)
-  doctor    User     @relation("DoctorConsent", fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  patient   User      @relation("PatientConsent", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    User      @relation("DoctorConsent", fields: [doctorId], references: [id], onDelete: Cascade)
+
   @@unique([patientId, doctorId])
   @@index([doctorId, revokedAt])
+}
+
+model ChatThread {
+  id            String        @id @default(uuid()) @db.Uuid
+  appointmentId String        @unique @db.Uuid
+  patientId     String        @db.Uuid
+  doctorId      String        @db.Uuid
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient       User          @relation("ChatPatient", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        User          @relation("ChatDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  messages      ChatMessage[]
+}
+
+model ChatMessage {
+  id        String     @id @default(uuid()) @db.Uuid
+  threadId  String     @db.Uuid
+  senderId  String     @db.Uuid
+  text      String     @db.VarChar(2000)
+  createdAt DateTime   @default(now())
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender    User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model Feedback {
+  id            String      @id @default(uuid()) @db.Uuid
+  appointmentId String      @unique @db.Uuid
+  patientId     String      @db.Uuid
+  text          String      @db.VarChar(2000)
+  isHidden      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient       User        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([isHidden, createdAt])
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  title     String    @db.VarChar(160)
+  body      String    @db.VarChar(500)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

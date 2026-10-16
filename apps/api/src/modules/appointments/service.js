@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
 import { HttpError } from '../../lib/httpError.js';
 import { kolkataDate, kolkataDateTime } from '../doctors/service.js';
+import { eventBus } from '../../lib/eventBus.js';
 
 const appointmentRelations = {
   doctor: {
@@ -73,7 +74,7 @@ export const createAppointment = async (input, requester) => {
     throw new HttpError(409, 'This slot is no longer available');
   const slotDate = kolkataDate(date);
   try {
-    return await prisma.$transaction(
+    const appointment = await prisma.$transaction(
       async (tx) => {
         const doctor = await tx.doctorProfile.findUnique({
           where: { id: input.doctorId },
@@ -164,6 +165,8 @@ export const createAppointment = async (input, requester) => {
       },
       { isolationLevel: 'Serializable' },
     );
+    eventBus.emit('appointment.booked', { appointmentId: appointment.id });
+    return appointment;
   } catch (error) {
     if (error instanceof HttpError) throw error;
     if (error.code === 'P2034' || error.code === 'P2002')

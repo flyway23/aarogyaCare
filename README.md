@@ -1,6 +1,6 @@
 # AarogyaCare
 
-AarogyaCare is a single-hospital management web app built as a college project demo. It includes patient booking and mock checkout, operator queue/bed/emergency handling, doctor records and consultation summaries, and a read-only admin overview. The final demo phase was completed directly; optional patient-consent controls and full admin CRUD from the skipped intermediate phases are not included.
+AarogyaCare is a single-hospital management web app built as a college project demo. It includes patient booking and mock checkout, operator queue/bed/emergency handling, doctor records and consultation summaries, patient privacy and follow-up tools, and a metadata-driven admin panel. The complete demo scope covers Phases 0–9; see [PROGRESS.md](PROGRESS.md) for checks and route protections.
 
 ## Architecture
 
@@ -122,7 +122,26 @@ Three fake PDF samples (prescription, lab report, bill) and one fake lab image a
 - `POST /api/consultations/:appointmentId/start` and `/end`: the assigned doctor advances a checked-in appointment to `IN_CONSULTATION`, then to `COMPLETED`. Completion emits `consultation.completed` and closes its queue entry.
 - `POST /api/consultations/:appointmentId/report`: creates one diagnosis/notes/follow-up report and its medicine rows for a completed appointment. Reports have no update or delete route.
 
-The doctor portal has today's queue, emergency cases, patient records with summary/source snippets/original files/timeline, the report form, and AVAILABLE/BUSY/AWAY controls. Consent records are enforced when revoked; patient-facing consent grant/revocation endpoints are scheduled for Phase 7.
+The doctor portal has today's queue, emergency cases, patient records with summary/source snippets/original files/timeline, the report form, and AVAILABLE/BUSY/AWAY controls. Patient-granted or revoked consent is enforced on doctor record access.
+
+## Phase 7 patient portal
+
+- `GET /api/records` and `/api/records/export`: patient-only, limited to that patient's documents, completed-visit summaries, reports, and prescriptions. Reads are audit logged; the export downloads as JSON.
+- `GET|POST /api/chat/:appointmentId/messages`: patient and assigned doctor only, after the appointment is completed. Patients can send up to 20 messages per Kolkata calendar day; the page polls every five seconds and says chat is not for emergencies.
+- `POST /api/feedback`: patient-only, one text response per completed appointment. Admin can hide feedback through `PATCH /api/admin/feedback/:id/hide` or manage it in Resources.
+- `POST /api/appointments/:id/reschedule`: patient-only; moves an active held/confirmed appointment to an available scheduled slot in a transaction.
+- `GET /api/notifications`, `POST /api/notifications/:id/read`: authenticated roles; each account only sees its own notifications. Booking payment, consultation/report completion, and document processing create notifications.
+- `GET|PUT /api/consents`, `GET /api/access-history`: patient-only consent and record-access history.
+- Appointments booked more than 24 hours ahead queue a delayed reminder email. The worker sends it only if the appointment is confirmed when the reminder is due.
+
+The patient portal includes Records (document downloads and JSON export, visit reports, summary, doctor chat, feedback), Record access, and Notifications. Rescheduling is available from active appointment cards.
+
+## Phase 8 admin panel
+
+- `GET /api/admin/meta` returns the resource whitelist and field metadata. Admin-only generic resource routes support paginated/searchable `GET /:resource`, item reads, `POST`, `PUT`, `DELETE`, user soft-delete/restore, and `GET /:resource/export.csv`.
+- Whitelisted resources: Users, Specialties, Doctor profiles, Wards, Beds, Feature flags, Feedback, Payments (read-only), and Audit log (read-only). Unknown resources return 404. Admin writes are audit logged; the current admin cannot disable their own account.
+- `GET /api/admin/overview` reports appointments today, average queue wait, bed occupancy, monthly revenue, and failed document jobs. `GET /api/admin/documents/failed` and `POST /api/admin/documents/:id/retry` list and retry failed processing jobs.
+- Admin **Resources** uses shared metadata-driven table and form components. Admin can create, edit, soft-delete, and restore users and create/edit/delete specialties; CSV export is available per resource.
 
 ## Checks
 
